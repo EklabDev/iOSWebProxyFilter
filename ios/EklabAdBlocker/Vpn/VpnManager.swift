@@ -18,6 +18,10 @@ final class VpnManager: ObservableObject {
     }
 
     init() {
+#if targetEnvironment(simulator)
+        status = .disconnected
+        lastError = "VPN is not available in the iOS Simulator. Run on a physical device to use Traffic Inspector."
+#else
         observer = NotificationCenter.default.addObserver(
             forName: .NEVPNStatusDidChange,
             object: nil,
@@ -30,6 +34,7 @@ final class VpnManager: ObservableObject {
             }
         }
         Task { await reload() }
+#endif
     }
 
     deinit {
@@ -39,6 +44,10 @@ final class VpnManager: ObservableObject {
     }
 
     func reload() async {
+#if targetEnvironment(simulator)
+        status = .disconnected
+        lastError = "VPN is not available in the iOS Simulator. Run on a physical device to use Traffic Inspector."
+#else
         do {
             let managers = try await loadAll()
             let existing = managers.first {
@@ -50,9 +59,14 @@ final class VpnManager: ObservableObject {
         } catch {
             lastError = error.localizedDescription
         }
+#endif
     }
 
     func setEnabled(_ enabled: Bool) async {
+#if targetEnvironment(simulator)
+        status = .disconnected
+        lastError = "VPN is not available in the iOS Simulator. Run on a physical device to use Traffic Inspector."
+#else
         lastError = nil
         do {
             let mgr = try await ensureManager()
@@ -73,8 +87,10 @@ final class VpnManager: ObservableObject {
         } catch {
             lastError = error.localizedDescription
         }
+#endif
     }
 
+#if !targetEnvironment(simulator)
     private func ensureManager() async throws -> NETunnelProviderManager {
         if let manager { return manager }
         await reload()
@@ -128,4 +144,5 @@ final class VpnManager: ObservableObject {
             }
         }
     }
+#endif
 }
