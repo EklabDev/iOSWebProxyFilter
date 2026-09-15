@@ -13,22 +13,19 @@ public final class RulesStore: @unchecked Sendable {
 
     @discardableResult
     public func insert(_ rule: Rule) -> Int64 {
-        db.run(
-            """
-            INSERT INTO rules (name, enabled, priority, selectorType, selectorValue, action, createdAt)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-            """
-        ) { stmt in
-            SQLiteBind.text(stmt, 1, rule.name)
-            SQLiteBind.int(stmt, 2, rule.enabled ? 1 : 0)
-            SQLiteBind.int(stmt, 3, rule.priority)
-            SQLiteBind.text(stmt, 4, rule.selectorType.rawValue)
-            SQLiteBind.text(stmt, 5, rule.selectorValue)
-            SQLiteBind.text(stmt, 6, rule.action.rawValue)
-            SQLiteBind.int64(stmt, 7, rule.createdAt)
-        }
+        insertRow(rule)
         bumpVersion()
         return db.lastInsertId()
+    }
+
+    public func insertMany(_ rules: [Rule]) {
+        guard !rules.isEmpty else { return }
+        db.transaction {
+            for rule in rules {
+                self.insertRow(rule)
+            }
+        }
+        bumpVersion()
     }
 
     public func update(_ rule: Rule) {
@@ -104,6 +101,23 @@ public final class RulesStore: @unchecked Sendable {
         )
         return logs.reduce(0) { acc, log in
             acc + (engine.matches(rule: probe, flow: log.toFlowContext()) ? 1 : 0)
+        }
+    }
+
+    private func insertRow(_ rule: Rule) {
+        db.run(
+            """
+            INSERT INTO rules (name, enabled, priority, selectorType, selectorValue, action, createdAt)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """
+        ) { stmt in
+            SQLiteBind.text(stmt, 1, rule.name)
+            SQLiteBind.int(stmt, 2, rule.enabled ? 1 : 0)
+            SQLiteBind.int(stmt, 3, rule.priority)
+            SQLiteBind.text(stmt, 4, rule.selectorType.rawValue)
+            SQLiteBind.text(stmt, 5, rule.selectorValue)
+            SQLiteBind.text(stmt, 6, rule.action.rawValue)
+            SQLiteBind.int64(stmt, 7, rule.createdAt)
         }
     }
 

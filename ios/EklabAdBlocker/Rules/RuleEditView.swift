@@ -54,18 +54,16 @@ struct RuleEditView: View {
                             Text(label).tag(type)
                         }
                     }
-                    .onChange(of: selectorType) { newType in
-                        value = ""
-                        if !nameTouched { name = "" }
+                    .onChange(of: selectorType) {
+                        if !nameTouched { name = autoName(selectorType, value) }
                         schedulePreview()
-                        _ = newType
                     }
 
                     TextField(valuePlaceholder, text: $value)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
-                        .onChange(of: value) { newValue in
-                            if !nameTouched { name = autoName(selectorType, newValue) }
+                        .onChange(of: value) {
+                            if !nameTouched { name = autoName(selectorType, value) }
                             schedulePreview()
                         }
 
@@ -93,8 +91,10 @@ struct RuleEditView: View {
                 }
 
                 Section {
-                    TextField("Rule name", text: $name)
-                        .onChange(of: name) { _ in nameTouched = true }
+                    TextField("Rule name", text: Binding(
+                        get: { name },
+                        set: { name = $0; nameTouched = true }
+                    ))
                     TextField("Priority (lower runs first)", text: $priorityText)
                         .keyboardType(.numberPad)
                 }

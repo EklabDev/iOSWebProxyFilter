@@ -199,5 +199,8 @@ public enum AppConstants {
     public static let dbName = "traffic_inspector.db"
     public static let settingsSuite = "group.dev.eklab.adblocker"
     public static let blockQuicKey = "block_quic"
+    public static let protectionEnabledKey = "protection_enabled"
+    public static let protectionWidgetKind = "dev.eklab.adblocker.ProtectionWidget"
+    public static let protectionControlKind = "dev.eklab.adblocker.ProtectionControl"
     public static let retentionTaskId = "dev.eklab.adblocker.retention"
 }
