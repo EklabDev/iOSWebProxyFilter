@@ -44,7 +44,7 @@ struct ProtectionWidgetView: View {
                 .foregroundStyle(.secondary)
             Text(entry.isOn ? "Protection is on" : "Protection is off")
                 .font(.headline)
-            Toggle(isOn: entry.isOn, intent: ToggleProtectionIntent())
+            Toggle("Protection", isOn: entry.isOn, intent: ToggleProtectionIntent())
                 .labelsHidden()
             Text(
                 entry.isOn
