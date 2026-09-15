@@ -6,6 +6,7 @@ final class RulesViewModel: ObservableObject {
     @Published var rules: [Rule] = []
     @Published var hostSuggestions: [String] = []
     @Published var showAdd = false
+    @Published var showKnownAds = false
     @Published var pendingDelete: Rule?
 
     private let services = AppServices.shared
@@ -22,6 +23,21 @@ final class RulesViewModel: ObservableObject {
 
     func addRule(_ rule: Rule) {
         _ = services.rules.insert(rule)
+        refresh()
+    }
+
+    func addKnownAds(_ domains: [String]) {
+        let toInsert = KnownAdDomains.domainsToInsert(from: domains, existingRules: rules)
+        let newRules = toInsert.map { domain in
+            Rule(
+                name: domain,
+                enabled: true,
+                selectorType: .hostSuffix,
+                selectorValue: domain,
+                action: .block
+            )
+        }
+        services.rules.insertMany(newRules)
         refresh()
     }
 

@@ -77,4 +77,44 @@ final class StoreTests: XCTestCase {
         let old = connections.prune(cutoff: Int64.max)
         XCTAssertEqual(old, 2)
     }
+
+    func testInsertManyBumpsVersionOnceAndSkipsEmpty() {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let rules = RulesStore(db: Database(path: dir.appendingPathComponent("t.db").path))
+        XCTAssertEqual(rules.rulesVersion(), 0)
+
+        rules.insertMany([])
+        XCTAssertEqual(rules.rulesVersion(), 0)
+        XCTAssertTrue(rules.getAll().isEmpty)
+
+        let batch = [
+            TestSupport.rule(selectorType: .hostSuffix, selectorValue: ".applovin.com"),
+            TestSupport.rule(selectorType: .hostSuffix, selectorValue: ".vungle.com"),
+        ]
+        rules.insertMany(batch)
+        XCTAssertEqual(rules.rulesVersion(), 1)
+        XCTAssertEqual(rules.getAll().count, 2)
+
+        let existing = rules.getAll()
+        let selected = [".applovin.com", ".tenjin.io"]
+        let toInsert = KnownAdDomains.domainsToInsert(from: selected, existingRules: existing)
+        XCTAssertEqual(toInsert, [".tenjin.io"])
+        rules.insertMany(toInsert.map {
+            TestSupport.rule(selectorType: .hostSuffix, selectorValue: $0)
+        })
+        XCTAssertEqual(rules.rulesVersion(), 2)
+        XCTAssertEqual(rules.getAll().count, 3)
+    }
+
+    func testProtectionEnabledRoundTripsThroughUserDefaults() {
+        let defaults = UserDefaults(suiteName: "dev.eklab.adblocker.test.\(UUID().uuidString)")!
+        let store = SettingsStore(defaults: defaults)
+        XCTAssertFalse(store.protectionEnabled)
+        store.setProtectionEnabled(true)
+        XCTAssertTrue(store.protectionEnabled)
+        XCTAssertTrue(SettingsStore(defaults: defaults).protectionEnabled)
+        store.setProtectionEnabled(false)
+        XCTAssertFalse(SettingsStore(defaults: defaults).protectionEnabled)
+    }
 }

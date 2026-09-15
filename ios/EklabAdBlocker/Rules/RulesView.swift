@@ -24,7 +24,13 @@ struct RulesView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     EditButton()
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button {
+                        model.showKnownAds = true
+                    } label: {
+                        Image(systemName: "checklist")
+                    }
+                    .accessibilityLabel("Known ads")
                     Button {
                         model.showAdd = true
                     } label: {
@@ -43,6 +49,16 @@ struct RulesView: View {
                         model.showAdd = false
                     },
                     onCancel: { model.showAdd = false }
+                )
+            }
+            .sheet(isPresented: $model.showKnownAds) {
+                KnownAdsTemplateView(
+                    existingRules: model.rules,
+                    onAdd: { domains in
+                        model.addKnownAds(domains)
+                        model.showKnownAds = false
+                    },
+                    onCancel: { model.showKnownAds = false }
                 )
             }
             .alert(

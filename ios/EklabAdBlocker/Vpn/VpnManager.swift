@@ -30,6 +30,7 @@ final class VpnManager: ObservableObject {
             Task { @MainActor in
                 if let conn = note.object as? NEVPNConnection {
                     self?.status = conn.status
+                    self?.publishStatus()
                 }
             }
         }
@@ -56,6 +57,7 @@ final class VpnManager: ObservableObject {
             }
             manager = existing
             status = existing?.connection.status ?? .invalid
+            publishStatus()
         } catch {
             lastError = error.localizedDescription
         }
@@ -84,10 +86,16 @@ final class VpnManager: ObservableObject {
                 mgr.connection.stopVPNTunnel()
             }
             status = mgr.connection.status
+            publishStatus()
         } catch {
             lastError = error.localizedDescription
         }
 #endif
+    }
+
+    private func publishStatus() {
+        ProtectionTunnelController.persist(enabled: isRunning)
+        ProtectionWidgets.reload()
     }
 
 #if !targetEnvironment(simulator)

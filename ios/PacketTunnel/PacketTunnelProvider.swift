@@ -48,6 +48,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
             pipeline.start()
             self.reading = true
             self.readLoop()
+            self.settings.setProtectionEnabled(true)
             completionHandler(nil)
         }
     }
@@ -56,6 +57,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
         reading = false
         pipeline?.stop()
         pipeline = nil
+        settings.setProtectionEnabled(false)
         completionHandler()
     }
 

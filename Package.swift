@@ -1,10 +1,10 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.2
 import PackageDescription
 
 let package = Package(
     name: "TrafficInspectorCore",
     platforms: [
-        .iOS(.v16),
+        .iOS(.v26),
         .macOS(.v13),
     ],
     products: [
